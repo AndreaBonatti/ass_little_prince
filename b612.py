@@ -4,17 +4,16 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 from PIL.Image import *
 
-# Rotations for sphere
+# Rotations for the planet
 z_rot, z_speed = 0.0, 0.6
-
+# Rotations for the moon
 moon_rot, moon_speed = 0.0, 0.3
 
 # Properties for the Sky Dome
 distance_limit = 200
 sky_radius = distance_limit / 6
 sky_center = [0.0, 0.0, 0.0]
-
-# Safety radius: the observer can't escape this boundary. Max distance from the "sky dome center"
+# Safety radius: max distance from the "sky dome center"
 safety_radius = sky_radius / 3
 
 # Camera (eye) position, direction (also with phi and theta angles for direction and tilt)
@@ -125,14 +124,14 @@ def resize_scene(width, height):
 
 
 def draw_asteroid():
-    glPushMatrix()
+    glBindTexture(GL_TEXTURE_2D, b612)
 
+    glPushMatrix()
     glRotatef(90, 1.0, 0.0, 0.0)
     # Rotate The Sphere On It's Z Axis
     glRotatef(z_rot, 0.0, 0.0, 1.0)
 
     glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, b612)
     # Draw A Sphere With A Radius Of 1 And 32 Longitude And 32 Latitude Segments
     gluSphere(quadratic, 1, 32, 32)
 
@@ -150,6 +149,7 @@ def draw_little_prince():
     glPushMatrix()
     set_position(90, 90, 0)
     glRotatef(-z_rot, 0.0, 1.0, 0.0)
+
     glBegin(GL_QUADS)  # Begin
 
     glTexCoord2f(0.0, 1.0)
@@ -163,65 +163,54 @@ def draw_little_prince():
 
     glEnd()  # End coordinates
 
+    glPopMatrix()
+
     glDisable(GL_ALPHA_TEST)
     glDisable(GL_BLEND)
 
-    glPopMatrix()
 
-
-def draw_baobab():
+# Function to draw the baobab with the default value of 8 plans
+def draw_baobab(num_of_plans=8):
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_ALPHA_TEST)
     glAlphaFunc(GL_GREATER, 0.0)
 
-    glBindTexture(GL_TEXTURE_2D, baobab)
+    if num_of_plans <= 0:
+        print("Si è scelto un numero non ammissibile di piani per il baobab!")
+        print("Verrano usati 8 piani su cui disegnare il baobab come di default!")
+        num_of_plans = 8
 
-    glPushMatrix()
+    angle = 0
+    increment = 180 / num_of_plans
+    for i in range(0, num_of_plans):
+        glBindTexture(GL_TEXTURE_2D, baobab)
 
-    glRotatef(-z_rot, 0.0, 1.0, 0.0)
-    set_position(150, 60, 0)
+        glPushMatrix()
 
-    glBegin(GL_QUADS)  # Begin
+        glRotatef(-z_rot, 0.0, 1.0, 0.0)
+        set_position(150, 60, 0)
+        glRotatef(angle, 1.0, 0.0, 0.0)
 
-    glTexCoord2f(0.0, 1.0)
-    glVertex3f(3, -0.5, 0.0)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3f(3, 0.5, 0.0)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3f(1.0, 0.5, 0.0)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3f(1.0, -0.5, 0.0)
+        glBegin(GL_QUADS)  # Begin
 
-    glEnd()  # End coordinates
+        glTexCoord2f(0.0, 1.0)
+        glVertex3f(3, -0.5, 0.0)
+        glTexCoord2f(1.0, 1.0)
+        glVertex3f(3, 0.5, 0.0)
+        glTexCoord2f(1.0, 0.0)
+        glVertex3f(1.0, 0.5, 0.0)
+        glTexCoord2f(0.0, 0.0)
+        glVertex3f(1.0, -0.5, 0.0)
 
-    glPopMatrix()
+        glEnd()  # End coordinates
 
-    glBindTexture(GL_TEXTURE_2D, baobab)
+        glPopMatrix()
 
-    glPushMatrix()
-
-    glRotatef(-z_rot, 0.0, 1.0, 0.0)
-    set_position(150, 60, 0)
-    glRotatef(90, 1.0, 0.0, 0.0)
-
-    glBegin(GL_QUADS)  # Begin
-
-    glTexCoord2f(0.0, 1.0)
-    glVertex3f(3, -0.5, 0.0)
-    glTexCoord2f(1.0, 1.0)
-    glVertex3f(3, 0.5, 0.0)
-    glTexCoord2f(1.0, 0.0)
-    glVertex3f(1.0, 0.5, 0.0)
-    glTexCoord2f(0.0, 0.0)
-    glVertex3f(1.0, -0.5, 0.0)
-
-    glEnd()  # End coordinates
+        angle += increment
 
     glDisable(GL_ALPHA_TEST)
     glDisable(GL_BLEND)
-
-    glPopMatrix()
 
 
 def draw_fox():
@@ -250,13 +239,14 @@ def draw_fox():
 
     glEnd()  # End coordinates
 
+    glPopMatrix()
+
     glDisable(GL_ALPHA_TEST)
     glDisable(GL_BLEND)
 
-    glPopMatrix()
-
 
 def draw_moon():
+    glBindTexture(GL_TEXTURE_2D, moon)
 
     glPushMatrix()
 
@@ -269,7 +259,6 @@ def draw_moon():
     glRotatef(z_rot, 1.0, 0.0, 0.0)
 
     glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, moon)
     gluSphere(quadratic, 0.2, 32, 32)
 
     glPopMatrix()
@@ -325,15 +314,10 @@ def draw_scene():
     glTranslatef(0.0, 0.0, -5.0)
 
     draw_sky_box()
-
     draw_asteroid()
-
     draw_little_prince()
-
-    draw_baobab()
-
+    draw_baobab(4)
     draw_fox()
-
     draw_moon()
 
     z_rot += z_speed
