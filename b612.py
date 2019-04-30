@@ -16,13 +16,12 @@ sky_center = [0.0, 0.0, 0.0]
 # Safety radius: max distance from the "sky dome center"
 safety_radius = sky_radius / 3
 
-# Camera (eye) position, direction (also with phi and theta angles for direction and tilt)
+# Camera parameters
 phi = 0.0
 theta = 0.0
 eye = [0.0, 0.0, 8.0]
-eye_direction = [0.0, 5.0, 50.0]
-# Grain of camera turning
 eye_rotation_delta = 5
+
 
 def load_textures(fn, has_alpha_channel=False):
     # 2 possible cases: image with or without alpha channel
@@ -265,31 +264,14 @@ def draw_moon():
 
 
 def draw_sky_box():
-    # Disable the lighting so that the sky is always visible and doesn't change in accordance with light sources
-    glDisable(GL_LIGHTING)
+    glBindTexture(GL_TEXTURE_2D, starmap)
 
     glPushMatrix()
 
-    # Disable depth mask, enable texturing
-    glDepthMask(GL_FALSE)
-    glEnable(GL_TEXTURE_2D)
-
-    glBindTexture(GL_TEXTURE_2D, starmap)
-
-    # Rotate the texture and the sky dome
-    glTranslatef(0.0, 0.0, 0.0)
     glRotatef(90, 1.0, 0.0, 0.0)
-
-    # Draw the sky dome
     gluSphere(quadratic, sky_radius, 128, 128)
 
-    # Re-enable depth mask
-    glDepthMask(GL_TRUE)
-
     glPopMatrix()
-
-    # Re-enable lighting
-    glEnable(GL_LIGHTING)
 
 
 def draw_scene():
@@ -299,15 +281,15 @@ def draw_scene():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     # Reset The View
     glLoadIdentity()
-    # Set the camera (eye) position and direction
-    eye_direction = (
+    # Set the camera
+    center = (
         eye[0] - math.sin(theta * 2 * math.pi / 360.0),
         eye[1] + math.sin(phi * 2 * math.pi / 360),
         eye[2] - math.cos(theta * 2 * math.pi / 360.0)
     )
     gluLookAt(
         eye[0], eye[1], eye[2],
-        eye_direction[0], eye_direction[1], eye_direction[2],
+        center[0], center[1], center[2],
         0.0, 1.0, 0.0
     )
     # Move Into The Screen
@@ -327,46 +309,44 @@ def draw_scene():
     glutSwapBuffers()
 
 
-def set_safe_eye_position(new_position):
-    global eye
-    distance_of_new_position_from_sky_center = math.sqrt(
-        (new_position[0] - sky_center[0]) ** 2
-        + (new_position[1] - sky_center[1]) ** 2
-        + (new_position[2] - sky_center[2]) ** 2
-    )
-
-    if distance_of_new_position_from_sky_center <= safety_radius:
-        eye = new_position
-        glutPostRedisplay()
-        return True
-    else:
-        return False
-
-
 def key_pressed(key, x, y):
     global eye, theta, phi, eye_rotation_delta
     eye_new = eye[:]
+    theta_in_radians = theta * 2 * math.pi / 360.0
+    phi_in_radians = phi * 2 * math.pi / 360.0
 
     if key == b'\x1b':
         sys.exit()
 
     if key == b'w':  # move forward
-        eye_new[0] -= math.sin(theta * 2 * math.pi / 360.0)  # radians conversion of angle theta
-        eye_new[2] -= math.cos(theta * 2 * math.pi / 360.0)
+        eye_new[0] -= math.sin(theta_in_radians)
+        eye_new[1] += math.sin(phi_in_radians)
+        eye_new[2] -= math.cos(theta_in_radians)
 
     if key == b's':  # move back
-        eye_new[0] += math.sin(theta * 2 * math.pi / 360.0)
-        eye_new[2] += math.cos(theta * 2 * math.pi / 360.0)
+        eye_new[0] += math.sin(theta_in_radians)
+        eye_new[1] -= math.sin(phi_in_radians)
+        eye_new[2] += math.cos(theta_in_radians)
 
     if key == b'a':  # move left
-        eye_new[0] -= math.cos(theta * 2 * math.pi / 360.0)
-        eye_new[2] += math.sin(theta * 2 * math.pi / 360.0)
+        eye_new[0] -= math.cos(theta_in_radians)
+        eye_new[1] += math.sin(phi_in_radians)
+        eye_new[2] += math.sin(theta_in_radians)
 
     if key == b'd':  # move right
-        eye_new[0] += math.cos(theta * 2 * math.pi / 360.0)
-        eye_new[2] -= math.sin(theta * 2 * math.pi / 360.0)
+        eye_new[0] += math.cos(theta_in_radians)
+        eye_new[1] -= math.sin(phi_in_radians)
+        eye_new[2] -= math.sin(theta_in_radians)
 
-    set_safe_eye_position(eye_new)
+    distance_of_eye_new_from_sky_center = math.sqrt(
+        (eye_new[0] - sky_center[0]) ** 2
+        + (eye_new[1] - sky_center[1]) ** 2
+        + (eye_new[2] - sky_center[2]) ** 2
+    )
+
+    if distance_of_eye_new_from_sky_center <= safety_radius:
+        eye = eye_new
+        glutPostRedisplay()
     return
 
 
