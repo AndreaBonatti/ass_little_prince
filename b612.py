@@ -93,9 +93,9 @@ def init(width, height):
     glMatrixMode(GL_MODELVIEW)
 
 
-# Function to set the position of object with respect to the center of the sky box
+# Function to set the position of object with respect to the center of the skybox
 def set_position(target_longitude, target_latitude, target_height):
-    # 1) Move to the sky box center
+    # 1) Move to the skybox center
     glTranslatef(sky_center[0], sky_center[1], sky_center[2])
 
     # 2) Rotate around y by a degree of longitude - 90
@@ -352,21 +352,17 @@ def key_pressed(key, x, y):
 
 def special_pressed(key, x, y):
     global theta, eye_rotation_delta, phi
+    
     if key == GLUT_KEY_RIGHT:  # look right
         theta = (theta - eye_rotation_delta) % 360
-        glutPostRedisplay()
-        return
     if key == GLUT_KEY_LEFT:  # look left
         theta = (theta + eye_rotation_delta) % 360
-        glutPostRedisplay()
-        return
     if key == GLUT_KEY_UP and phi < 90:  # look up
         phi += eye_rotation_delta
-        glutPostRedisplay()
-        return
     if key == GLUT_KEY_DOWN and phi > -90:  # look down
         phi -= eye_rotation_delta
-        glutPostRedisplay()
+        
+    glutPostRedisplay()
     return
 
 
@@ -414,7 +410,7 @@ def main():
 
 # Print message to console, and kick off the main to get it rolling.
 if __name__ == "__main__":
-    print("Press W A S D keys to move the observer in space")
+    print("Press W A S D keys to move the observer in the space")
     print("Press the arrow keys to change the camera orientation")
     print("Press the ESC key to quit")
     main()
